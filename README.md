@@ -13,4 +13,7 @@ train your model with my setting by execute
 ```
 python train.py --model RseNet18 --lr 0.001 --epochs 30
 ```
-You can modify the parameters. The models provided include ['ResNet18', 'ResNet50', 'EfficientNetB0'] for now. After the training, the test result will be showed automatically, and your model will also be saved in your directory.
+You can modify the parameters. The models provided include 'ResNet18', 'ResNet50', 'EfficientNetB0' for now. After the training, the test result will be showed automatically, and your model will also be saved in your directory.
+
+## Notebook
+you can checkout the [main.ipynb](https://github.com/HaohanTsao/CIFAR10-with-PyTorch/blob/main/main.ipynb) to see the inital visualized training process.
