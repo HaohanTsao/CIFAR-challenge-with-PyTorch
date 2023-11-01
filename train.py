@@ -151,7 +151,7 @@ training_loop(
     model=model,
     loss_fn=loss_fn,
     train_loader=train_loader,
-    val_loader=valid_loader,
+    val_loader=val_loader,
     patience=5
 )
 
