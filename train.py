@@ -168,7 +168,7 @@ print(f"Average Test Loss: {test_loss / len(test_loader)}, Test Accuracy: {test_
 # %%
 # save model
 current_datetime = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-model_folder = f'models/model_{current_datetime}'
+model_folder = f'trained_models/model_{current_datetime}'
 
 os.makedirs(model_folder, exist_ok=True)
 
