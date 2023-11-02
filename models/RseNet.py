@@ -10,7 +10,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 # %%
-class RisidualBlock(nn.Module):
+class BasicBlock(nn.Module):
     def __init__(
         self, 
         in_channels: int,
@@ -19,7 +19,7 @@ class RisidualBlock(nn.Module):
         expansion: int = 1,
         downsample: nn.Module = None
     ) -> None:
-        super(RisidualBlock, self).__init__()
+        super(BasicBlock, self).__init__()
         self.expansion = expansion
         self.downsample = downsample
         self.conv1 = nn.Conv2d(
@@ -40,6 +40,7 @@ class RisidualBlock(nn.Module):
             bias=False
         )
         self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
@@ -54,18 +55,56 @@ class RisidualBlock(nn.Module):
         out = self.relu(out)
         return  out
 
+class Bottleneck(nn.Module):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            stride = 1,
+            expansion = 4,
+            downsample: nn.Module = None,
+    ):
+        super(Bottleneck, self).__init__()
+        self.expansion = expansion
+        self.conv1 = nn.Conv2d(
+            in_channels, 
+            out_channels, 
+            kernel_size=1,
+            bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
+            out_channels, 
+            out_channels,
+            kernel_size=3, 
+            stride=stride,
+            padding=1,
+            bias=False
+        )
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.conv3 = nn.Conv2d(
+            out_channels, 
+            out_channels*self.expansion,
+            kernel_size=1, 
+            bias=False
+        )
+        self.bn3 = self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor: 
+
 
 class ResNet(nn.Module):
     def __init__(
         self, 
         num_layers: int,
-        block: Type[RisidualBlock],
+        block: Type[BasicBlock],
         img_channels: int = 3,
         num_classes: int  = 10
     ) -> None:
         super(ResNet, self).__init__()
         if num_layers == 18:
-            # The following `layers` list defines the number of `RisidualBlock` 
+            # The following `layers` list defines the number of `BasicBlock` 
             # to use to build the network and how many basic blocks to stack
             # together.
             layers = [2, 2, 2, 2]
@@ -97,7 +136,7 @@ class ResNet(nn.Module):
         self.fc = nn.Linear(512*self.expansion, num_classes)
     def _make_layer(
         self, 
-        block: Type[RisidualBlock],
+        block: Type[BasicBlock],
         out_channels: int,
         blocks: int,
         stride: int = 1
@@ -153,7 +192,7 @@ class ResNet(nn.Module):
 # %%
 
 def ResNet18():
-    return ResNet(18,RisidualBlock)
+    return ResNet(18,BasicBlock)
 
 def ResNet50():
-    return ResNet(50,RisidualBlock)
+    return ResNet(50,Bottleneck)
