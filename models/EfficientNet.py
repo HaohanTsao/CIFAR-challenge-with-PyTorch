@@ -10,7 +10,13 @@ import torchvision
 import torchvision.transforms as transforms
 
 # %%
+
+
+
 class EfficientNet():
+
+
     pass
+
 def EfficientNetB0():
-    pass
+    return EfficientNet(0)

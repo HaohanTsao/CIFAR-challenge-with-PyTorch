@@ -66,8 +66,17 @@ available_models = ['ResNet18', 'ResNet50', 'EfficientNetB0']
 if model_name == 'ResNet18':
     model = ResNet18()
 
+elif model_name == 'ResNet34':
+    model = ResNet34()
+
 elif model_name == 'ResNet50':
     model = ResNet50()
+
+elif model_name == 'ResNet101':
+    model = ResNet101()
+
+elif model_name == 'ResNet152':
+    model = ResNet152()
 
 elif model_name == 'EfficientNetB0':
      model = EfficientNetB0()
@@ -168,7 +177,7 @@ print(f"Average Test Loss: {test_loss / len(test_loader)}, Test Accuracy: {test_
 # %%
 # save model
 current_datetime = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-model_folder = f'trained_models/model_{current_datetime}'
+model_folder = f'trained_models/{model_name}_{current_datetime}'
 
 os.makedirs(model_folder, exist_ok=True)
 

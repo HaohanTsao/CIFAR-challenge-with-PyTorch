@@ -84,7 +84,7 @@ class Bottleneck(nn.Module):
             kernel_size=1, 
             bias=False
         )
-        self.bn3 = self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
+        self.bn3 = nn.BatchNorm2d(out_channels*self.expansion)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         identity = x
@@ -165,7 +165,7 @@ class ResNet(nn.Module):
         stride: int = 1
     ) -> nn.Sequential:
         downsample = None
-        if stride != 1:
+        if stride != 1 or self.in_channels != out_channels*self.expansion:
             """
             This should pass from `layer2` to `layer4` or 
             when building ResNets50 and above. Section 3.3 of the paper
@@ -216,16 +216,38 @@ class ResNet(nn.Module):
 # %%
 
 def ResNet18():
-    return ResNet(18,BasicBlock)
+    model = ResNet(18,BasicBlock)
+    test(model)
+    return model
 
 def ResNet34():
-    return ResNet(34, BasicBlock)
+    model = ResNet(34,BasicBlock)
+    test(model)
+    return model
 
 def ResNet50():
-    return ResNet(50,Bottleneck)
+    model = ResNet(50,Bottleneck)
+    test(model)
+    return model
 
 def ResNet101():
-    return ResNet(101,Bottleneck)
+    model = ResNet(101,Bottleneck)
+    test(model)
+    return model
 
 def ResNet152():
-    return ResNet(152,Bottleneck)
+    model = ResNet(152,Bottleneck)
+    test(model)
+    return model
+
+def test(model_fn):
+    model = model_fn
+    try:
+        x = torch.randn(2, 3, 32, 32)
+        y = model(x)
+        print('Your model is ready!')
+    except Exception as e:
+        error_message = "There are problems with the model. Please check the model's architecture."
+        raise Exception(error_message) from e
+# %%
+# model = ResNet50()
