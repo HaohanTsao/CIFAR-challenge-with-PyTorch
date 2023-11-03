@@ -1,13 +1,7 @@
 # %%
-import pandas as pd
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
 from typing import Type
-import torchvision
-import torchvision.transforms as transforms
 
 # %%
 class BasicBlock(nn.Module):
@@ -66,6 +60,7 @@ class Bottleneck(nn.Module):
     ):
         super(Bottleneck, self).__init__()
         self.expansion = expansion
+        self.downsample = downsample
         self.conv1 = nn.Conv2d(
             in_channels, 
             out_channels, 
@@ -91,9 +86,23 @@ class Bottleneck(nn.Module):
         )
         self.bn3 = self.bn2 = nn.BatchNorm2d(out_channels*self.expansion)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor: 
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        identity = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+        out = self.conv3(out)
+        out = self.bn3(out)
+        if self.downsample is not None:
+            identity = self.downsample(x)
+        out += identity
+        out = self.relu(out)
+        return  out
 
-
+        
 class ResNet(nn.Module):
     def __init__(
         self, 
@@ -103,10 +112,12 @@ class ResNet(nn.Module):
         num_classes: int  = 10
     ) -> None:
         super(ResNet, self).__init__()
+        '''
+        The following `layers` list defines the number of Redisiual Block
+        to use to build the network and how many blocks to stack
+        together.
+        '''
         if num_layers == 18:
-            # The following `layers` list defines the number of `BasicBlock` 
-            # to use to build the network and how many basic blocks to stack
-            # together.
             layers = [2, 2, 2, 2]
             self.expansion = 1
 
@@ -114,6 +125,18 @@ class ResNet(nn.Module):
             layers = [3, 4, 6, 3]
             self.expansion = 4
         
+        if num_layers == 34:
+            layers = [3, 4, 6, 3]
+            self.expansion = 1
+
+        if num_layers == 101:
+            layers = [3, 4, 23, 3]
+            self.expansion = 4
+        
+        if num_layers == 152:
+            layers = [3, 8, 36, 3]
+            self.expansion = 4
+
         self.in_channels = 64
         # All ResNets (18 to 152) contain a Conv2d => BN => ReLU for the first
         # three layers. Here, kernel size is 7.
@@ -173,6 +196,7 @@ class ResNet(nn.Module):
                 expansion=self.expansion
             ))
         return nn.Sequential(*layers)
+    
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv1(x)
         x = self.bn1(x)
@@ -182,8 +206,8 @@ class ResNet(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-        # The spatial dimension of the final layer's feature 
-        # map should be (7, 7) for all ResNets.
+        # The spatial dimension of the final layer's output 
+        # size should be (7, 7) for all ResNets.
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x)
@@ -194,5 +218,14 @@ class ResNet(nn.Module):
 def ResNet18():
     return ResNet(18,BasicBlock)
 
+def ResNet34():
+    return ResNet(34, BasicBlock)
+
 def ResNet50():
     return ResNet(50,Bottleneck)
+
+def ResNet101():
+    return ResNet(101,Bottleneck)
+
+def ResNet152():
+    return ResNet(152,Bottleneck)
