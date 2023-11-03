@@ -11,11 +11,7 @@ import torchvision.transforms as transforms
 
 # %%
 
-
-
 class EfficientNet():
-
-
     pass
 
 def EfficientNetB0():
