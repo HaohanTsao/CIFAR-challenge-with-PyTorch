@@ -31,6 +31,7 @@ start_epoch = 0  # start from epoch 0
 # preparing data
 data_path = './data'
 if args.data == 'cifar10':
+    num_classes = 10
     train_transform = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -46,8 +47,9 @@ if args.data == 'cifar10':
     testing_set = torchvision.datasets.CIFAR10(root=data_path, train=False, download=False, transform=test_transform)
 
 elif args.data == 'cifar100':
+    num_classes = 100
     train_transform = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
+        transforms.RandomCrop(224, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize((0.5070751592371323, 0.48654887331495095, 0.4409178433670343), (0.2673342858792401, 0.2564384629170883, 0.27615047132568404)),
@@ -86,44 +88,22 @@ available_models = [
     ]
 
 if model_name == 'ResNet18':
-    model = ResNet18()
+    model = ResNet18(num_classes)
 
 elif model_name == 'ResNet34':
-    model = ResNet34()
+    model = ResNet34(num_classes)
 
 elif model_name == 'ResNet50':
-    model = ResNet50()
+    model = ResNet50(num_classes)
 
 elif model_name == 'ResNet101':
-    model = ResNet101()
+    model = ResNet101(num_classes)
 
 elif model_name == 'ResNet152':
-    model = ResNet152()
+    model = ResNet152(num_classes)
 
-elif model_name == 'EfficientNetB0':
-     model = EfficientNetB0()
-
-elif model_name == 'EfficientNetB1':
-     model = EfficientNetB1()
-
-elif model_name == 'EfficientNetB2':
-     model = EfficientNetB2()
-     
-elif model_name == 'EfficientNetB3':
-     model = EfficientNetB3()
-     
-elif model_name == 'EfficientNetB4':
-     model = EfficientNetB4()
-     
-elif model_name == 'EfficientNetB5':
-     model = EfficientNetB5()
-     
-elif model_name == 'EfficientNetB6':
-     model = EfficientNetB6()
-     
-elif model_name == 'EfficientNetB7':
-     model = EfficientNetB7()
-
+elif model_name.startwith("EfficientNet"):
+    model = efficientnet(model_name, num_classes=num_classes)
 else:
     raise ValueError(f"{model_name} is not available please use one of models below \n{', '.join(available_models)}")
 
