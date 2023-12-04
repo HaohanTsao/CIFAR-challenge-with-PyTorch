@@ -1,5 +1,5 @@
 # CIFAR10-with-PyTorch
-Train CIFAR 10 with PyTorch
+Train CIFAR 10 & CIFFAR 100 with PyTorch
 
 ## Data
 you can download data by execute
