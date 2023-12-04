@@ -113,9 +113,7 @@ class ResNet(nn.Module):
     ) -> None:
         super(ResNet, self).__init__()
         '''
-        The following `layers` list defines the number of Redisiual Block
-        to use to build the network and how many blocks to stack
-        together.
+        以下的 layers list宣告Residual Block的數量，以及stack的數量。
         '''
         if num_layers == 18:
             layers = [2, 2, 2, 2]
@@ -138,8 +136,8 @@ class ResNet(nn.Module):
             self.expansion = 4
 
         self.in_channels = 64
-        # All ResNets (18 to 152) contain a Conv2d => BN => ReLU for the first
-        # three layers. Here, kernel size is 7.
+        # 所有 ResNet（18到152）都在前三層包含一個 Conv2d => BN => ReLU。
+        # kernel size為7。
         self.conv1 = nn.Conv2d(
             in_channels=img_channels,
             out_channels=self.in_channels,
@@ -166,12 +164,6 @@ class ResNet(nn.Module):
     ) -> nn.Sequential:
         downsample = None
         if stride != 1 or self.in_channels != out_channels*self.expansion:
-            """
-            This should pass from `layer2` to `layer4` or 
-            when building ResNets50 and above. Section 3.3 of the paper
-            Deep Residual Learning for Image Recognition
-            (https://arxiv.org/pdf/1512.03385v1.pdf).
-            """
             downsample = nn.Sequential(
                 nn.Conv2d(
                     self.in_channels, 

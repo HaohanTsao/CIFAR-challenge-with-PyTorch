@@ -9,8 +9,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-from torch.utils.data import random_split
-
+from torch.utils.data import random_split, DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
@@ -19,29 +18,47 @@ from models import *
 # setting device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # %%
-parser = argparse.ArgumentParser(description='train CIFAR 10 with PyTorch')
+parser = argparse.ArgumentParser(description='train CIFAR 10/100 with PyTorch')
+parser.add_argument('--data', choices=['cifar10', 'cifar100'], required=True)
 parser.add_argument('--model', choices=['ResNet18', 'ResNet50', 'EfficientNetB0'], required=True,)
 parser.add_argument('--lr', help='input learning rate')
-parser.add_argument('--epochs', type=int, default=10, help='number of epochs')
+parser.add_argument('--epochs', type=int, default=200, help='number of epochs')
 args = parser.parse_args()
 # %%
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0
 # %%
 # preparing data
-train_transform = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-])
-test_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
-])
-
 data_path = './data'
-training_set = torchvision.datasets.CIFAR10(root=data_path, train=True, download=False)
+if args.data == 'cifar10':
+    train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+    test_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    ])
+    data_path += '/cifar10'
+    training_set = torchvision.datasets.CIFAR10(root=data_path, train=True, download=False)
+    testing_set = torchvision.datasets.CIFAR10(root=data_path, train=False, download=False, transform=test_transform)
+
+elif args.data == 'cifar100':
+    train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5070751592371323, 0.48654887331495095, 0.4409178433670343), (0.2673342858792401, 0.2564384629170883, 0.27615047132568404)),
+    ])
+    test_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5070751592371323, 0.48654887331495095, 0.4409178433670343), (0.2673342858792401, 0.2564384629170883, 0.27615047132568404)),
+    ])
+    data_path += '/cifar100'
+    training_set = torchvision.datasets.CIFAR100(root=data_path, train=True, download=False)
+    testing_set = torchvision.datasets.CIFAR100(root=data_path, train=False, download=False, transform=test_transform)
 
 torch.manual_seed(42)
 val_size = int(len(training_set)*0.1)
@@ -50,18 +67,23 @@ train_ds, val_ds = random_split(training_set, [train_size, val_size])
 
 train_ds.dataset.transform = train_transform
 val_ds.dataset.transform = test_transform
-train_loader = torch.utils.data.DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=2)
-val_loader = torch.utils.data.DataLoader(val_ds, batch_size=128, shuffle=False, num_workers=2)
-
-testing_set = torchvision.datasets.CIFAR10(root=data_path, train=False, download=False, transform=test_transform)
-test_loader = torch.utils.data.DataLoader(testing_set, batch_size=128, shuffle=False, num_workers=2)
+train_loader = DataLoader(train_ds, batch_size=128, shuffle=True, num_workers=2)
+val_loader = DataLoader(val_ds, batch_size=128, shuffle=False, num_workers=2)
+test_loader = DataLoader(testing_set, batch_size=128, shuffle=False, num_workers=2)
 
 classes = testing_set.classes
 
 # %%
 # choose model
 model_name = args.model
-available_models = ['ResNet18', 'ResNet50', 'EfficientNetB0']
+VALID_MODELS = (
+    'EfficientNetB0', )
+
+available_models = [
+    'ResNet18', 'ResNet50', 'ResNet101', 'ResNet152', 
+    'EfficientNetB0', 'EfficientNetB1', 'EfficientNetB2', 'EfficientNetB3',
+    'EfficientNetB4', 'EfficientNetB5', 'EfficientNetB6', 'EfficientNetB7',
+    ]
 
 if model_name == 'ResNet18':
     model = ResNet18()
@@ -81,6 +103,27 @@ elif model_name == 'ResNet152':
 elif model_name == 'EfficientNetB0':
      model = EfficientNetB0()
 
+elif model_name == 'EfficientNetB1':
+     model = EfficientNetB1()
+
+elif model_name == 'EfficientNetB2':
+     model = EfficientNetB2()
+     
+elif model_name == 'EfficientNetB3':
+     model = EfficientNetB3()
+     
+elif model_name == 'EfficientNetB4':
+     model = EfficientNetB4()
+     
+elif model_name == 'EfficientNetB5':
+     model = EfficientNetB5()
+     
+elif model_name == 'EfficientNetB6':
+     model = EfficientNetB6()
+     
+elif model_name == 'EfficientNetB7':
+     model = EfficientNetB7()
+
 else:
     raise ValueError(f"{model_name} is not available please use one of models below \n{', '.join(available_models)}")
 
@@ -88,13 +131,14 @@ if device == 'cuda':
     model = torch.nn.DataParallel(model)
     cudnn.benchmark = True
 
-
 # %%
 epochs = args.epochs
+milestones = [epochs*0.3, epochs*0.6, epochs*0.8]
 loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=args.lr,
                       momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones, gamma=0.2) #learning rate decay
 
 # %%
 # traning def
